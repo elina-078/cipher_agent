@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Шпион: Секретное действие</title>
+  
+  <meta name="theme-color" content="#0a0d14">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- ==========================================
+         ЭКРАН 1: ШТАБ СПЕЦСЛУЖБ / НАСТРОЙКИ МИССИИ
+         ========================================== -->
+    <section id="screen-setup" class="screen active">
+      
+      <!-- Верхняя тактическая панель -->
+      <header class="top-header">
+        <button id="btn-rules" class="circle-btn" title="Инструктаж миссии">?</button>
+        <div class="top-agent-branding">
+          <h1>ШТАБ СПЕЦСЛУЖБ</h1>
+          <span>ОПЕРАЦИЯ: ШИФР</span>
+        </div>
+        <button id="btn-dict-modal" class="circle-btn" title="База данных и шифровки">⚙️</button>
+      </header>
+
+      <!-- Карточка: АГЕНТУРНАЯ СЕТЬ • ОФЛАЙН -->
+      <div class="agent-card">
+        <div class="agent-card-header">
+          <span class="agent-card-title">🛡️ АГЕНТУРНАЯ СЕТЬ • ОФЛАЙН</span>
+          <span style="font-size: 11px; font-weight: 700; color: var(--agent-green); font-family: monospace;">АКТИВНА ✓</span>
+        </div>
+        <div id="players-list-chips" class="agents-chips-grid">
+          <!-- Заполняется динамически из JS -->
+        </div>
+      </div>
+
+      <!-- Сдвоенные карточки: ШПИОНЫ (СВОБОДНОЕ ЧИСЛО) и ТАЙМЕР РАУНДА -->
+      <div class="split-cards-row">
+        <!-- Карточка шпионов со степпером и ручным вводом -->
+        <div id="card-spies" class="split-card">
+          <div class="split-card-top">
+            <span class="split-card-label">ВРАЖЕСКИЕ ШПИОНЫ</span>
+            <span id="btn-spies-custom" class="split-card-icon" title="Задать число вручную" style="cursor: pointer;">✏️</span>
+          </div>
+          <div class="spy-count-stepper">
+            <button id="btn-spies-minus" class="stepper-arrow-btn" type="button" aria-label="Меньше шпионов">−</button>
+            <div id="val-spies" class="spy-val-display" title="Нажмите, чтобы ввести число вручную">1</div>
+            <button id="btn-spies-plus" class="stepper-arrow-btn" type="button" aria-label="Больше шпионов">+</button>
+          </div>
+        </div>
+
+        <!-- Карточка таймера раунда -->
+        <div id="card-round-btn" class="split-card" style="cursor: pointer;">
+          <div class="split-card-top">
+            <span class="split-card-label">ТАЙМЕР МИССИИ</span>
+            <span class="split-card-icon">⏱️</span>
+          </div>
+          <div id="val-round-time" class="time-val-display">03:00</div>
+        </div>
+      </div>
+
+      <!-- Карточка: ПАРАМЕТРЫ ОПЕРАЦИИ -->
+      <div class="agent-card">
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-title">База шифров</span>
+            <span class="toggle-sub">111 182 кодовых слова в памяти</span>
+          </div>
+          <span style="font-size: 0.82rem; font-weight: 800; color: var(--agent-green); font-family: monospace;">ГОТОВА ✓</span>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-title">Условный сигнал</span>
+            <span class="toggle-sub">Скрытый жест для агентов связи</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-action" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-title">Победа шпиона при расшифровке</span>
+            <span class="toggle-sub">Шпион побеждает, верно назвав слово</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggle-spy-guess-win" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Карточка: Инструктаж миссии (Правила за 30 секунд) -->
+      <div id="card-rules-btn" class="rules-briefing-card">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 26px;">📁</span>
+          <div>
+            <div style="font-size: 1rem; font-weight: 800; color: #fff;">Инструктаж миссии</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">Сводка правил операции за 30 секунд</div>
+          </div>
+        </div>
+        <div class="circle-btn" style="width: 32px; height: 32px; font-size: 14px;">➔</div>
+      </div>
+
+      <!-- Нижняя тактическая панель старта -->
+      <div class="bottom-action-bar">
+        <button id="btn-sound" class="circle-btn" title="Звуковые сигналы">🔊</button>
+        <button id="btn-start-game" class="btn-play-pill">
+          <span>▶ НАЧАТЬ ОПЕРАЦИЮ</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ==========================================
+         ЭКРАН 2: ВЫДАЧА ДОСЬЕ (PASS & PLAY)
+         ========================================== -->
+    <section id="screen-pass" class="screen">
+      
+      <!-- Верхний статус агента -->
+      <div class="pass-screen-top">
+        <button id="btn-cancel-game" class="circle-btn" title="Прервать операцию">✕</button>
+        <div id="pass-player-badge" class="player-current-badge">
+          <span>🐼</span> <span>1</span>
+        </div>
+        <div style="font-size: 0.72rem; font-weight: 800; color: var(--gold-accent); border: 1px solid var(--border-gold); padding: 4px 10px; border-radius: var(--radius-full); font-family: monospace;">
+          СЕКРЕТНО
+        </div>
+      </div>
+
+      <!-- Интерактивная стопка карт с 3D-колодой -->
+      <div id="card-scene" class="deck-scene">
+        
+        <!-- Тени колоды секретных досье -->
+        <div class="deck-card-shadow-2"></div>
+        <div class="deck-card-shadow-1"></div>
+
+        <!-- Основная поворотная карта -->
+        <div id="secret-card" class="deck-card">
+          
+          <!-- РУБАШКА КАРТЫ: ЭМБЛЕМА СПЕЦСЛУЖБ И РАЗВЕДКИ -->
+          <div class="card-side card-side-back">
+            <svg viewBox="0 0 290 430" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <clipPath id="agentCardClip"><rect width="290" height="430" rx="26" ry="26"/></clipPath>
+                
+                <!-- Радиальный фон разведцентра -->
+                <radialGradient id="agentBgGrad" cx="50%" cy="50%" r="65%">
+                  <stop offset="0%" stop-color="#192438"/>
+                  <stop offset="60%" stop-color="#0f1624"/>
+                  <stop offset="100%" stop-color="#070a10"/>
+                </radialGradient>
+
+                <!-- Золотистый градиент герба -->
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#fbbf24"/>
+                  <stop offset="50%" stop-color="#f59e0b"/>
+                  <stop offset="100%" stop-color="#b45309"/>
+                </linearGradient>
+
+                <!-- Изумрудный луч сканера -->
+                <linearGradient id="scannerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stop-color="#22c55e" stop-opacity="0.7"/>
+                  <stop offset="100%" stop-color="#22c55e" stop-opacity="0.0"/>
+                </linearGradient>
+
+                <!-- Микросетка безопасности -->
+                <pattern id="securityGrid" width="16" height="16" patternUnits="userSpaceOnUse">
+                  <path d="M 16 0 L 0 0 0 16" fill="none" stroke="rgba(255,255,255,0.035)" stroke-width="0.8"/>
+                </pattern>
+              </defs>
+
+              <g clip-path="url(#agentCardClip)">
+                <!-- Базовый глубокий фон -->
+                <rect width="290" height="430" fill="url(#agentBgGrad)"/>
+                <rect width="290" height="430" fill="url(#securityGrid)"/>
+
+                <!-- Внешняя двойная тактическая рамка -->
+                <rect x="12" y="12" width="266" height="406" rx="18" fill="none" stroke="#25354e" stroke-width="3"/>
+                <rect x="18" y="18" width="254" height="394" rx="14" fill="none" stroke="rgba(245, 158, 11, 0.4)" stroke-width="1.2" stroke-dasharray="8 4"/>
+
+                <!-- Угловые тактические визиры (Target corners) -->
+                <!-- Верх-лево -->
+                <path d="M 24 38 L 24 24 L 38 24" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+                <!-- Верх-право -->
+                <path d="M 266 38 L 266 24 L 252 24" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+                <!-- Низ-лево -->
+                <path d="M 24 392 L 24 406 L 38 406" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+                <!-- Низ-право -->
+                <path d="M 266 392 L 266 406 L 252 406" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+
+                <!-- Концентрические кольца радара разведки -->
+                <g transform="translate(145, 215)">
+                  <!-- Внешний радар с рисками градусов -->
+                  <circle cx="0" cy="0" r="115" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1.5"/>
+                  <circle cx="0" cy="0" r="102" fill="none" stroke="rgba(34, 197, 94, 0.25)" stroke-width="1" stroke-dasharray="4 6"/>
+                  <circle cx="0" cy="0" r="78" fill="rgba(10, 15, 24, 0.85)" stroke="#324563" stroke-width="2"/>
+                  
+                  <!-- Лучи компаса/прицела -->
+                  <line x1="-120" y1="0" x2="-80" y2="0" stroke="rgba(245, 158, 11, 0.5)" stroke-width="1.5"/>
+                  <line x1="80" y1="0" x2="120" y2="0" stroke="rgba(245, 158, 11, 0.5)" stroke-width="1.5"/>
+                  <line x1="0" y1="-120" x2="0" y2="-80" stroke="rgba(245, 158, 11, 0.5)" stroke-width="1.5"/>
+                  <line x1="0" y1="80" x2="0" y2="120" stroke="rgba(245, 158, 11, 0.5)" stroke-width="1.5"/>
+
+                  <!-- Засечки 45 градусов -->
+                  <line x1="-75" y1="-75" x2="-62" y2="-62" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                  <line x1="75" y1="-75" x2="62" y2="-62" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                  <line x1="-75" y1="75" x2="-62" y2="62" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+                  <line x1="75" y1="75" x2="62" y2="62" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+                  <!-- Центральный щит разведки -->
+                  <path d="M 0,-56 L 42,-34 L 42,12 C 42,38 18,54 0,62 C -18,54 -42,38 -42,12 L -42,-34 Z" 
+                        fill="#0c121e" stroke="url(#goldGrad)" stroke-width="2.5"/>
+
+                  <!-- Внутренний малый щит -->
+                  <path d="M 0,-47 L 34,-29 L 34,10 C 34,31 14,44 0,51 C -14,44 -34,31 -34,10 L -34,-29 Z" 
+                        fill="rgba(34, 197, 94, 0.08)" stroke="rgba(34, 197, 94, 0.4)" stroke-width="1"/>
+
+                  <!-- Роза ветров / 8-конечная Звезда Разведки (Intelligence Star) -->
+                  <!-- Северный луч -->
+                  <polygon points="0,-42 6,-8 0,0" fill="#fbbf24"/>
+                  <polygon points="0,-42 -6,-8 0,0" fill="#d97706"/>
+                  <!-- Южный луч -->
+                  <polygon points="0,42 6,8 0,0" fill="#d97706"/>
+                  <polygon points="0,42 -6,8 0,0" fill="#fbbf24"/>
+                  <!-- Восточный луч -->
+                  <polygon points="42,0 8,-6 0,0" fill="#fbbf24"/>
+                  <polygon points="42,0 8,6 0,0" fill="#d97706"/>
+                  <!-- Западный луч -->
+                  <polygon points="-42,0 -8,-6 0,0" fill="#d97706"/>
+                  <polygon points="-42,0 -8,6 0,0" fill="#fbbf24"/>
+                  
+                  <!-- Диагональные малые лучи -->
+                  <polygon points="22,-22 5,-1 0,0" fill="#f59e0b" opacity="0.85"/>
+                  <polygon points="22,-22 1,-5 0,0" fill="#b45309" opacity="0.85"/>
+                  <polygon points="-22,-22 -5,-1 0,0" fill="#b45309" opacity="0.85"/>
+                  <polygon points="-22,-22 -1,-5 0,0" fill="#f59e0b" opacity="0.85"/>
+                  <polygon points="22,22 5,1 0,0" fill="#b45309" opacity="0.85"/>
+                  <polygon points="22,22 1,5 0,0" fill="#f59e0b" opacity="0.85"/>
+                  <polygon points="-22,22 -5,1 0,0" fill="#f59e0b" opacity="0.85"/>
+                  <polygon points="-22,22 -1,5 0,0" fill="#b45309" opacity="0.85"/>
+
+                  <!-- Центральное око / прицел -->
+                  <circle cx="0" cy="0" r="7" fill="#0c121e" stroke="#fbbf24" stroke-width="1.8"/>
+                  <circle cx="0" cy="0" r="3" fill="#22c55e"/>
+                </g>
+
+                <!-- Верхний заголовок: СЛУЖБА СПЕЦИАЛЬНЫХ ОПЕРАЦИЙ -->
+                <text x="145" y="52" text-anchor="middle" font-family="'SF Pro Display', -apple-system, sans-serif" 
+                      font-size="9" font-weight="900" fill="#f59e0b" letter-spacing="3.2">
+                  ★ СЛУЖБА СПЕЦОПЕРАЦИЙ ★
+                </text>
+                
+                <text x="145" y="68" text-anchor="middle" font-family="'SF Mono', Consolas, monospace" 
+                      font-size="8" font-weight="700" fill="#8c9cb0" letter-spacing="2">
+                  ОСОБЫЙ ОТДЕЛ • РАЗВЕДКА
+                </text>
+
+                <!-- Тактический гриф "СОВЕРШЕННО СЕКРЕТНО" со штампом под углом -->
+                <g transform="translate(145, 355)">
+                  <!-- Фоновая плашка штампа -->
+                  <rect x="-96" y="-14" width="192" height="28" rx="6" fill="#141c2b" stroke="#374863" stroke-width="1.5"/>
+                  <text x="0" y="4" text-anchor="middle" font-family="'SF Mono', Consolas, monospace" 
+                        font-size="10.5" font-weight="900" fill="#ffffff" letter-spacing="2.5">
+                    СОВЕРШЕННО СЕКРЕТНО
+                  </text>
+                </g>
+
+                <!-- Угловой красный гриф секретности "TOP SECRET / ОВ" -->
+                <g transform="translate(210, 85) rotate(14)">
+                  <rect x="-34" y="-10" width="68" height="20" rx="3" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-opacity="0.85"/>
+                  <text x="0" y="4" text-anchor="middle" font-family="'SF Mono', Consolas, monospace" 
+                        font-size="8.5" font-weight="900" fill="#ef4444" letter-spacing="1.5" fill-opacity="0.9">
+                    ГРИФ: ОВ
+                  </text>
+                </g>
+
+                <!-- Нижняя телеметрия и штрихкод безопасности -->
+                <g transform="translate(145, 395)">
+                  <!-- Штрихкод -->
+                  <line x1="-70" y1="0" x2="-70" y2="7" stroke="#8c9cb0" stroke-width="2"/>
+                  <line x1="-65" y1="0" x2="-65" y2="7" stroke="#8c9cb0" stroke-width="1"/>
+                  <line x1="-60" y1="0" x2="-60" y2="7" stroke="#8c9cb0" stroke-width="3"/>
+                  <line x1="-53" y1="0" x2="-53" y2="7" stroke="#8c9cb0" stroke-width="1"/>
+                  <line x1="-48" y1="0" x2="-48" y2="7" stroke="#8c9cb0" stroke-width="2"/>
+                  <line x1="-42" y1="0" x2="-42" y2="7" stroke="#8c9cb0" stroke-width="4"/>
+                  <line x1="-34" y1="0" x2="-34" y2="7" stroke="#8c9cb0" stroke-width="1"/>
+                  
+                  <text x="5" y="6" font-family="'SF Mono', Consolas, monospace" font-size="7.5" font-weight="700" fill="#546375" letter-spacing="1.5">
+                    SEC-ID: 111-182 // AUTH-OK
+                  </text>
+                </g>
+
+              </g>
+            </svg>
+          </div>
+
+          <!-- ЛИЦЕВАЯ СТОРОНА КАРТЫ: ДОСЬЕ ОПЕРАТИВНИКА -->
+          <div id="card-back" class="card-side card-side-front">
+            
+            <!-- Статус роли -->
+            <div id="card-role-badge" class="card-role-title player">АГЕНТ СВЯЗИ</div>
+
+            <!-- Контент мирного агента: секретная буква -->
+            <div id="card-player-content" style="margin: 10px 0;">
+              <span style="font-size: 0.78rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-family: monospace;">
+                ВАША ШИФРОБУКВА
+              </span>
+              <div id="card-letter-display" class="card-letter-hero">А</div>
+            </div>
+
+            <!-- Контент вражеского шпиона -->
+            <div id="card-spy-content" class="hidden" style="margin: 15px 0;">
+              <div style="font-size: 3.6rem; margin-bottom: 4px;">🕵️</div>
+              <div style="font-size: 1.75rem; font-weight: 900; color: #f87171; letter-spacing: 1px;">ВЫ ШПИОН!</div>
+              <p style="font-size: 0.85rem; color: #cbd5e1; margin-top: 10px; line-height: 1.45;">
+                У вас <strong>нет буквы</strong> и <strong>нет условного сигнала</strong>.<br>
+                Слушайте ассоциации агентов, вычислите секретное слово и не раскройте себя!
+              </p>
+            </div>
+
+            <!-- Блок условного сигнала (тайного действия) -->
+            <div id="card-action-box" class="card-action-container">
+              <div class="card-action-label">🎭 УСЛОВНЫЙ СИГНАЛ (ТАЙНОЕ ДЕЙСТВИЕ)</div>
+              <div id="card-action-text" class="card-action-val">Почесать кончик носа</div>
+              <div id="card-action-hint" class="card-action-hint">
+                Выполняйте его незаметно во время беседы. У шпиона сигнала нет!
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Текст-подсказка под картой -->
+      <div id="pass-instruction-text" class="text-center" style="font-size: 0.95rem; font-weight: 700; color: var(--text-muted); margin-bottom: 16px;">
+        👆 Нажмите на досье, чтобы раскрыть его
+      </div>
+
+      <!-- Кнопка перехода к следующему оперативнику -->
+      <button id="btn-next-player" class="btn-play-pill w-full" disabled style="opacity: 0.5;">
+        <span>Сначала изучите досье</span>
+      </button>
+
+    </section>
+
+    <!-- ==========================================
+         ЭКРАН 3: ОБСУЖДЕНИЕ И ТАЙМЕР ОПЕРАЦИИ
+         ========================================== -->
+    <section id="screen-discussion" class="screen">
+      
+      <!-- Верхняя тактическая панель -->
+      <header class="top-header">
+        <button id="btn-cancel-discussion" class="circle-btn" title="Прервать операцию">✕</button>
+        <div class="top-agent-branding">
+          <span style="font-size: 0.72rem; letter-spacing: 2px;">ОПЕРАТИВНОЕ СОВЕЩАНИЕ</span>
+        </div>
+        <button id="btn-rules-discussion" class="circle-btn" title="Инструктаж">?</button>
+      </header>
+
+      <!-- Чистый кольцевой таймер без лишних иконок -->
+      <div class="timer-round-container">
+        <div id="ring-timer-clickable" class="ring-timer-wrapper" title="Нажмите, чтобы поставить таймер на паузу или возобновить">
+          <svg class="ring-timer-svg" viewBox="0 0 260 260">
+            <circle class="ring-bg" cx="130" cy="130" r="120"></circle>
+            <circle id="timer-progress" class="ring-bar" cx="130" cy="130" r="120"></circle>
+          </svg>
+          
+          <div id="timer-display" class="ring-time-text">03:00</div>
+          <div id="timer-status-hint" class="ring-status-hint">НАЖМИТЕ ДЛЯ ПАУЗЫ</div>
+        </div>
+      </div>
+
+      <!-- Нижние сдвоенные кнопки (Оперативники / Расшифровка) -->
+      <div class="split-pills-row">
+        <button id="btn-show-players-modal" class="bottom-pill-btn">
+          <span id="label-players-count">Оперативники • 5</span>
+        </button>
+
+        <button id="btn-finish-discussion" class="bottom-pill-btn" style="background: #ffffff; color: #0a0d14; font-weight: 900;">
+          <span>К расшифровке ➔</span>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- ==========================================
+         ЭКРАН 4: ВВОД РАСШИФРОВКИ КАЖДЫМ ИГРОКОМ
+         ========================================== -->
+    <section id="screen-guess" class="screen">
+      <header class="top-header">
+        <div style="width: 42px;"></div>
+        <div class="top-agent-branding">
+          <h1>РАСШИФРОВКА</h1>
+          <span>СБОР ДАННЫХ</span>
+        </div>
+        <div style="width: 42px;"></div>
+      </header>
+
+      <div class="agent-card text-center" style="padding: 24px 20px;">
+        <div id="guess-player-badge" style="font-size: 2.2rem; margin-bottom: 6px;">🐼 1</div>
+        <h3 id="guess-prompt-title" style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 6px;">
+          Введите кодовое слово:
+        </h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">
+          Какое слово составили шифробуквы агентурной сети?
+        </p>
+
+        <input 
+          type="text" 
+          id="guess-input" 
+          class="player-input-box text-center" 
+          placeholder="СЛОВО" 
+          maxlength="20"
+          autocomplete="off" 
+          autocorrect="off" 
+          spellcheck="false"
+          style="font-size: 1.5rem; letter-spacing: 2px;"
+        >
+
+        <button id="btn-submit-guess" class="btn-play-pill w-full mt-2">
+          <span>ПОДТВЕРДИТЬ ОТВЕТ ➔</span>
+        </button>
+      </div>
+
+      <div class="text-center" style="font-size: 0.8rem; color: var(--text-dim); margin-top: 14px;">
+        🔒 Ваш ответ зашифрован и скрыт от других участников
+      </div>
+    </section>
+
+    <!-- ==========================================
+         ЭКРАН 5: ФИНАЛЬНЫЙ РАСКЛАД И ИТОГИ МИССИИ
+         ========================================== -->
+    <section id="screen-reveal" class="screen">
+      <header class="top-header">
+        <div style="width: 42px;"></div>
+        <div class="top-agent-branding">
+          <h1>ИТОГИ ОПЕРАЦИИ</h1>
+          <span>РАССЕКРЕЧИВАНИЕ</span>
+        </div>
+        <div style="width: 42px;"></div>
+      </header>
+
+      <!-- Финальная перевернутая карта -->
+      <div id="reveal-scene" class="deck-scene" style="height: 240px; margin-bottom: 12px;">
+        <div id="reveal-card" class="deck-card" style="height: 230px;">
+          
+          <div class="card-side card-side-back" style="display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px;">
+            <div>
+              <div style="font-size: 2.6rem; margin-bottom: 8px;">🏆</div>
+              <div style="font-size: 1.15rem; font-weight: 900; color: #fff;">НАЖМИТЕ НА КАРТУ</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">чтобы раскрыть секретное слово</div>
+            </div>
+          </div>
+
+          <div class="card-side card-side-front" style="padding: 16px; justify-content: center;">
+            <span style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-family: monospace;">
+              КОДОВОЕ СЛОВО МИССИИ
+            </span>
+            <div id="final-secret-word" style="font-size: 2.5rem; font-weight: 900; color: #fff; letter-spacing: 3px; margin: 4px 0;">
+              С Л О Н
+            </div>
+            
+            <div id="final-action-container" class="card-action-container" style="margin-top: 6px;">
+              <div class="card-action-label">🎭 УСЛОВНЫЙ СИГНАЛ РАУНДА</div>
+              <div id="final-secret-action" class="card-action-val">Почесать кончик носа</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Блок победителя (появляется после переворота) -->
+      <div id="winner-banner-wrap" class="hidden">
+        
+        <div id="winner-banner" class="agent-card text-center" style="border: 2px solid var(--agent-green);">
+          <div id="winner-title" style="font-size: 1.35rem; font-weight: 900; color: #4ade80;">
+            МИССИЯ ВЫПОЛНЕНА!
+          </div>
+          <div id="winner-reason" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; line-height: 1.45;">
+            Агенты связи успешно расшифровали кодовое слово!
+          </div>
+        </div>
+
+        <!-- Досье ответов оперативников -->
+        <div class="agent-card">
+          <div class="agent-card-title mb-2">ОТЧЁТ ПО ОПЕРАТИВНИКАМ</div>
+          <div id="results-list">
+            <!-- Заполняется динамически -->
+          </div>
+        </div>
+
+        <button id="btn-play-again" class="btn-play-pill w-full mb-2">
+          <span>🔄 НОВАЯ ОПЕРАЦИЯ</span>
+        </button>
+        
+        <button id="btn-back-to-setup" class="bottom-pill-btn w-full">
+          <span>Вернуться в штаб</span>
+        </button>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ==========================================
+       МОДАЛКА: ДОБАВИТЬ ОПЕРАТИВНИКА
+       ========================================== -->
+  <div id="modal-add-player" class="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 class="modal-sheet-title">Добавить оперативника</h3>
+        <button class="circle-btn" style="width: 34px; height: 34px; font-size: 16px;" data-close-modal>✕</button>
+      </div>
+
+      <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Позывной / Имя</div>
+      <input type="text" id="input-new-player-name" class="player-input-box" placeholder="Позывной" maxlength="12">
+
+      <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 10px;">Эмблема оперативника</div>
+      <div id="avatar-choices" class="avatar-selection-grid">
+        <!-- Аватарки из видео -->
+      </div>
+
+      <button id="btn-confirm-add-player" class="btn-play-pill w-full">
+        <span>ВНЕСТИ В СПИСОК</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       МОДАЛКА: ВЫБОР ЧИСЛА ШПИОНОВ (ЛЮБОЕ КОЛИЧЕСТВО)
+       ========================================== -->
+  <div id="modal-spies-picker" class="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 class="modal-sheet-title">Количество шпионов</h3>
+        <button class="circle-btn" style="width: 34px; height: 34px;" data-close-modal>✕</button>
+      </div>
+      
+      <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 16px;">
+        Укажите любое количество вражеских шпионов. Должно оставаться хотя бы 3 агента связи для составления слова.
+      </p>
+
+      <!-- Интерактивный регулятор и поле прямого ввода -->
+      <div class="spies-modal-controls">
+        <button id="btn-modal-spy-minus" class="stepper-arrow-btn" style="width: 48px; height: 48px; font-size: 1.5rem;">−</button>
+        <input type="number" id="input-modal-spies" class="spies-modal-input" min="1" max="12" value="1">
+        <button id="btn-modal-spy-plus" class="stepper-arrow-btn" style="width: 48px; height: 48px; font-size: 1.5rem;">+</button>
+      </div>
+
+      <!-- Быстрые пресеты -->
+      <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-dim); text-transform: uppercase; margin: 16px 0 8px; font-family: monospace;">
+        БЫСТРЫЙ ВЫБОР:
+      </div>
+      <div id="spies-quick-presets" class="spies-presets-grid">
+        <!-- Кнопки 1, 2, 3, 4, 5 генерируются динамически -->
+      </div>
+
+      <button id="btn-save-spies-count" class="btn-play-pill w-full mt-3">
+        <span>ПРИМЕНИТЬ</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       МОДАЛКА: ВЫБОР ВРЕМЕНИ РАУНДА
+       ========================================== -->
+  <div id="modal-round-picker" class="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 class="modal-sheet-title">Время миссии</h3>
+        <button class="circle-btn" style="width: 34px; height: 34px;" data-close-modal>✕</button>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+        <button class="bottom-pill-btn btn-pick-time" data-time="60">01:00</button>
+        <button class="bottom-pill-btn btn-pick-time" data-time="120">02:00</button>
+        <button class="bottom-pill-btn btn-pick-time active" data-time="180">03:00</button>
+        <button class="bottom-pill-btn btn-pick-time" data-time="300">05:00</button>
+        <button class="bottom-pill-btn btn-pick-time" data-time="420">07:00</button>
+        <button class="bottom-pill-btn btn-pick-time" data-time="600">10:00</button>
+      </div>
+      <button class="btn-play-pill w-full" data-close-modal>ГОТОВО</button>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       МОДАЛКА: ИНСТРУКТАЖ МИССИИ (ПРАВИЛА)
+       ========================================== -->
+  <div id="modal-rules" class="modal-overlay">
+    <div class="modal-sheet" style="max-height: 85vh; overflow-y: auto;">
+      <div class="modal-sheet-header">
+        <h3 class="modal-sheet-title">Инструктаж миссии</h3>
+        <button class="circle-btn" style="width: 34px; height: 34px;" data-close-modal>✕</button>
+      </div>
+      <div style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.55;">
+        <p style="margin-bottom: 12px;">
+          <strong>🎯 Миссия:</strong> Мирные агенты связи получают по одной букве секретного кодового слова. Задавая друг другу вопросы по кругу или свободно, они должны понять, какое слово зашифровано, не выдав буквы шпионам!
+        </p>
+        <p style="margin-bottom: 12px;">
+          <strong>🕵️ Вражеский шпион:</strong> Не имеет ни буквы, ни условного сигнала. Задача шпиона — внимательно слушать ассоциации, блефовать и вычислить слово.
+        </p>
+        <p style="margin-bottom: 12px;">
+          <strong>🎭 Условный сигнал:</strong> У всех мирных агентов один и тот же секретный жест (почесать нос, одмигнуть, поправить рукав). Выполняйте его скрытно, чтобы опознать своих!
+        </p>
+        <p style="margin-bottom: 12px;">
+          <strong>🏆 Победа:</strong> В конце раунда каждый участник вводит слово. Если включена настройка победы шпиона при отгадке, верно назвавший слово шпион выигрывает. Иначе побеждают агенты связи, составившие слово!
+        </p>
+      </div>
+      <button class="btn-play-pill w-full mt-3" data-close-modal>ИНСТРУКТАЖ ПРИНЯТ</button>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       МОДАЛКА: СЛОВАРЬ И БАЗА ШИФРОВОК
+       ========================================== -->
+  <div id="modal-dict" class="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-sheet-header">
+        <h3 class="modal-sheet-title">База данных шифровок</h3>
+        <button class="circle-btn" style="width: 34px; height: 34px;" data-close-modal>✕</button>
+      </div>
+      <div style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 16px;">
+        <div style="color: var(--agent-green); font-weight: 800; font-family: monospace; margin-bottom: 8px;">
+          ✓ 111 182 СЛОВА ВСТРОЕНО
+        </div>
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 10px;">
+          В игру загружен полный словарь русского языка (существительные в именительном падеже от 3 до 14 букв). Все слова хранятся локально — никакого интернета и скачивания не требуется.
+        </p>
+        <div style="color: var(--gold-accent); font-weight: 800; font-family: monospace; margin-bottom: 4px;">
+          ✓ 194 ТАЙНЫХ ДЕЙСТВИЯ
+        </div>
+        <p style="font-size: 0.84rem; color: var(--text-muted);">
+          Большая база незаметных жестов и сигналов, которые всегда доступны для каждого раунда.
+        </p>
+      </div>
+      <button class="btn-play-pill w-full" data-close-modal>ЗАКРЫТЬ</button>
+    </div>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="actions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

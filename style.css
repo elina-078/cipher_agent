@@ -1,0 +1,914 @@
+/* ==========================================================================
+   ШПИОН: СЕКРЕТНОЕ ДЕЙСТВИЕ
+   Спецслужбы & Агентурная сеть (Secret Agents & Intelligence)
+   Слияние тактильного секретного досье и современного мобильного интерфейса
+   ========================================================================== */
+
+:root {
+  --bg-main: #0a0d14;
+  --bg-card: #141b27;
+  --bg-card-alt: #1a2333;
+  --bg-pill: #1f2a3d;
+  --bg-pill-hover: #293852;
+  --bg-modal: #151d2b;
+  --bg-input: #0b0f17;
+
+  --text-white: #ffffff;
+  --text-muted: #8c9cb0;
+  --text-dim: #546375;
+
+  --agent-green: #22c55e;
+  --agent-green-glow: rgba(34, 197, 94, 0.2);
+  --spy-red: #ef4444;
+  --spy-red-glow: rgba(239, 68, 68, 0.2);
+  --gold-accent: #f59e0b;
+  --gold-glow: rgba(245, 158, 11, 0.2);
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-gold: rgba(245, 158, 11, 0.35);
+
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--bg-main);
+  color: var(--text-white);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  padding: calc(var(--safe-top) + 10px) 16px calc(var(--safe-bottom) + 16px);
+  background: 
+    radial-gradient(circle at 50% 5%, rgba(34, 197, 94, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #0e131d 0%, #07090f 100%);
+  background-attachment: fixed;
+  position: relative;
+}
+
+/* Фоновая тактическая сетка агентурного центра */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: 
+    radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   ВЕРХНЯЯ ПАНЕЛЬ СВЯЗИ (HEADER)
+   ========================================================================== */
+.top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  height: 48px;
+}
+
+.top-agent-branding {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.top-agent-branding h1 {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-white);
+  line-height: 1.1;
+}
+
+.top-agent-branding span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--agent-green);
+  font-family: "SF Mono", Consolas, monospace;
+}
+
+.circle-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.circle-btn:active {
+  transform: scale(0.92);
+  background: var(--bg-card-alt);
+}
+
+/* ==========================================================================
+   ЭКРАНЫ
+   ========================================================================== */
+.screen {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* ==========================================================================
+   КАРТОЧКИ АГЕНТУРНОГО ЦЕНТРА (SETUP SCREEN)
+   ========================================================================== */
+.agent-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border-subtle);
+}
+
+.agent-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.agent-card-title {
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "SF Mono", Consolas, monospace;
+}
+
+/* Фишки оперативников (Chips) */
+.agents-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.agent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-pill);
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-white);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.agent-chip:active {
+  transform: scale(0.94);
+  background: var(--bg-pill-hover);
+}
+
+.agent-chip-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  border: 1.5px dashed var(--text-dim);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+  font-size: 22px;
+  font-weight: 300;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.agent-chip-add:active {
+  transform: scale(0.92);
+  border-color: var(--text-white);
+  color: var(--text-white);
+}
+
+/* Сдвоенные карточки: ШПИОНЫ (С гибким счетчиком) и ВРЕМЯ РАУНДА */
+.split-cards-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.split-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.split-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.split-card-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: "SF Mono", Consolas, monospace;
+}
+
+/* Степпер количества шпионов прямо на карточке */
+.spy-count-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.stepper-arrow-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-pill);
+  border: 1px solid var(--border-subtle);
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+
+.stepper-arrow-btn:active {
+  transform: scale(0.92);
+  background: var(--bg-pill-hover);
+}
+
+.spy-val-display {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--spy-red);
+  font-family: "SF Mono", Consolas, monospace;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.time-val-display {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: var(--text-white);
+  line-height: 1;
+  margin-top: 14px;
+  letter-spacing: -0.5px;
+  cursor: pointer;
+  font-family: "SF Mono", Consolas, monospace;
+}
+
+/* Строки опций */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.toggle-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.toggle-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.toggle-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-white);
+}
+
+.toggle-sub {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Тумблер */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 30px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--bg-pill);
+  transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: var(--radius-full);
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 24px;
+  width: 24px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+input:checked + .slider {
+  background-color: var(--agent-green);
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* Инструктаж миссии (Правила) */
+.rules-briefing-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.rules-briefing-card:active {
+  transform: scale(0.98);
+}
+
+/* ==========================================================================
+   ГЛАВНАЯ КНОПКА СТАРТА МИССИИ
+   ========================================================================== */
+.bottom-action-bar {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 10px;
+}
+
+.btn-play-pill {
+  flex: 1;
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--text-white);
+  color: #080b12;
+  border: none;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.btn-play-pill:active {
+  transform: scale(0.98);
+  background: #e2e8f0;
+}
+
+/* ==========================================================================
+   ЭКРАН ВЫДАЧИ КАРТ (PASS & PLAY)
+   ========================================================================== */
+.pass-screen-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.player-current-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.deck-scene {
+  perspective: 1400px;
+  width: 100%;
+  height: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 10px 0 20px;
+  cursor: pointer;
+}
+
+/* Тени стопки */
+.deck-card-shadow-2 {
+  position: absolute;
+  width: 290px;
+  height: 430px;
+  border-radius: 26px;
+  background: #0f1622;
+  transform: translateY(-16px) scale(0.92);
+  opacity: 0.5;
+  border: 1px solid var(--border-subtle);
+}
+
+.deck-card-shadow-1 {
+  position: absolute;
+  width: 290px;
+  height: 430px;
+  border-radius: 26px;
+  background: #141c2b;
+  transform: translateY(-8px) scale(0.96);
+  opacity: 0.8;
+  border: 1px solid var(--border-subtle);
+}
+
+.deck-card {
+  width: 290px;
+  height: 430px;
+  border-radius: 26px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.65s cubic-bezier(0.2, 0.85, 0.32, 1.2);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
+}
+
+.deck-card.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-side {
+  position: absolute;
+  inset: 0;
+  border-radius: 26px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* РУБАШКА КАРТЫ: ЭМБЛЕМА СПЕЦСЛУЖБ И СЕКРЕТНЫХ АГЕНТОВ */
+.card-side-back {
+  background: linear-gradient(145deg, #121824 0%, #0a0d14 100%);
+  border: 3px solid #233045;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* ЛИЦЕВАЯ СТОРОНА: ДОСЬЕ АГЕНТА */
+.card-side-front {
+  transform: rotateY(180deg);
+  background: linear-gradient(180deg, #151e2b 0%, #0d131d 100%);
+  border: 3px solid #28374d;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+}
+
+.card-side-front.spy-theme {
+  background: linear-gradient(180deg, #261114 0%, #120709 100%);
+  border-color: #611e27;
+}
+
+.card-role-title {
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: var(--radius-full);
+  font-family: "SF Mono", Consolas, monospace;
+}
+
+.card-role-title.player {
+  background: var(--agent-green-glow);
+  color: #4ade80;
+  border: 1.5px solid var(--agent-green);
+}
+
+.card-role-title.spy {
+  background: var(--spy-red-glow);
+  color: #f87171;
+  border: 1.5px solid var(--spy-red);
+}
+
+.card-letter-hero {
+  font-size: 5.5rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 0 4px 25px rgba(0, 0, 0, 0.7);
+}
+
+.card-action-container {
+  width: 100%;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1.5px dashed rgba(245, 158, 11, 0.45);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.card-action-label {
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: var(--gold-accent);
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+  font-family: "SF Mono", Consolas, monospace;
+}
+
+.card-action-val {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.35;
+}
+
+.card-action-hint {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   ЭКРАН ОБСУЖДЕНИЯ И КОЛЬЦЕВОЙ ТАЙМЕР (ЧИСТЫЙ ДИЗАЙН БЕЗ ЗНАЧКОВ)
+   ========================================================================== */
+.timer-round-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 40px 0 50px;
+}
+
+.ring-timer-wrapper {
+  width: 270px;
+  height: 270px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.ring-timer-wrapper:active {
+  transform: scale(0.97);
+}
+
+.ring-timer-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 8;
+}
+
+.ring-bar {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 754;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
+}
+
+.ring-bar.danger {
+  stroke: var(--spy-red);
+}
+
+.ring-time-text {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -1px;
+  line-height: 1;
+  font-family: "SF Mono", Consolas, monospace;
+}
+
+.ring-status-hint {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 10px;
+  font-family: "SF Mono", Consolas, monospace;
+}
+
+/* Нижние сдвоенные кнопки обсуждения */
+.split-pills-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.bottom-pill-btn {
+  height: 56px;
+  border-radius: var(--radius-full);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s ease;
+}
+
+.bottom-pill-btn:active {
+  transform: scale(0.96);
+  background: var(--bg-card-alt);
+}
+
+/* ==========================================================================
+   МОДАЛЬНЫЕ ОКНА
+   ========================================================================== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-sheet {
+  background: var(--bg-modal);
+  border-radius: 28px;
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid var(--border-subtle);
+  padding: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+  animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-sheet-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.player-input-box {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  outline: none;
+  margin-bottom: 18px;
+}
+
+.player-input-box:focus {
+  border-color: #fff;
+}
+
+.avatar-selection-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+  justify-content: center;
+}
+
+.avatar-choice-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-full);
+  background: var(--bg-pill);
+  border: 2px solid transparent;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.avatar-choice-btn.selected {
+  border-color: #ffffff;
+  background: var(--bg-pill-hover);
+  transform: scale(1.1);
+}
+
+/* Управление шпионами в модалке */
+.spies-modal-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 12px 0 16px;
+}
+
+.spies-modal-input {
+  width: 90px;
+  height: 60px;
+  background: var(--bg-input);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--spy-red);
+  text-align: center;
+  font-family: "SF Mono", Consolas, monospace;
+  outline: none;
+}
+
+.spies-modal-input:focus {
+  border-color: var(--spy-red);
+}
+
+.spies-presets-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.spies-preset-btn {
+  flex: 1;
+  min-width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-pill);
+  border: 1px solid var(--border-subtle);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s ease;
+}
+
+.spies-preset-btn.active {
+  background: var(--spy-red);
+  border-color: var(--spy-red);
+  color: #fff;
+}
+
+.spies-preset-btn:active {
+  transform: scale(0.92);
+}
+
+/* ==========================================================================
+   ЭКРАН ГОЛОСОВАНИЯ / ВВОДА СЛОВ (VOTING & GUESS)
+   ========================================================================== */
+.voting-player-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border-subtle);
+}
+
+.voting-player-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.voting-player-avatar {
+  font-size: 24px;
+}
+
+.voting-player-name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* Вспомогательные классы */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.w-full { width: 100%; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-3 { margin-bottom: 12px; }
